@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Generated Content
+{% endblock %}
+
+{% block main %}
+<div class="container">
+    <div class="row align-items-start">
+        <div class="col">
+            <div class="row align-items-center">
+                <img src="{{image[0]}}">
+            </div>
+            <div class="row align-items-center">
+                <form action="/change" method="POST">
+                    <input type="submit" class="btn btn-primary mt-3" name="change_image" value="Change Image">
+                </form>
+            </div>
+        </div>
+        <div class="col">
+            <div class="row align-items-center">
+                <video width="400" controls>
+                    <source src="{{video[0]}}" type="video/mp4">
+                    Your browser does not support HTML video.
+                </video>
+            </div>
+            <div class="row align-items-center">
+                <form action="/change" method="POST">
+                    <input type="submit" class="btn btn-primary mt-3" name="change_video" value="Change Video">
+                </form>
+            </div>
+        </div>
+        <div class="col">
+            <div class="row align-items-center">
+                <audio controls>
+                    <source src="{{speech}}" type="audio/mpeg">
+                  Your browser does not support the audio element.
+                </audio>
+                <div class="row align-items-center">
+                    <form action="/change" method="POST">
+                        <input type="submit" class="btn btn-primary mt-3" name="change_audio" value="Change Audio">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-3">
+   
+</div>
+{% endblock %}

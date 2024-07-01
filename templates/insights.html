@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Media Insights
+{% endblock %}
+
+{% block main %}
+<form action="/insights" method="post" class="m-5" enctype="multipart/form-data" onsubmit="">
+    <label for="formFileLg" class="form-label ">Upload Image</label>
+    <input class="form-control form-control-lg" id="formFileLg" type="file" name="image" accept="image/*">
+    <div class="form-floating mb-3 mt-3">
+        <input type="url" name="video" class="form-control" id="floatingInput" placeholder="https://www.youtube.com/">
+        <label for="floatingInput">Input Youtube Video URL</label>
+      </div>
+    <input type="submit" class="mt-5 btn btn-primary shadow p-3 mb-5 rounded">
+</form>
+<div class="m-5">
+    <h1 class="display-3">Result</h1>
+    <dl class="row text-center mt-3">
+        <dt class="col-sm-3">Text in image uploaded:</dt>
+        {% if text is defined and text != "" %}
+            <dd class="col-sm-8">{{text}}</dd>
+        {% else %}
+            <div class="spinner-border text-primary col-sm-8" role="status" id="loading">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        {% endif %}
+    </dl>
+    <dl class="row text-center">
+        <dt class="col-sm-3">Summary of video provided:</dt>
+        {% if summary is defined and summary != "" %}
+            <dd class="col-sm-8">{{summary}}</dd>
+        {% else %}
+            <div class="spinner-border text-primary col-sm-8" role="status" id="loading">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        {% endif %}
+    </dl>
+</div>
+{% endblock %}

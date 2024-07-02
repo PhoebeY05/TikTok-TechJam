@@ -3,6 +3,7 @@ import requests
 import os
 import json
 import shutil
+import random
 
 # Text-To-Image Generation
 def Image(prompt, to_avoid = "lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry", changed = False):
@@ -39,7 +40,7 @@ def Image(prompt, to_avoid = "lowres, bad anatomy, bad hands, missing fingers, e
 
 
 # Text-to-Speech Generation
-def Speech(prompt, language = "English", voice = False, changed = False, gender = "F"):
+def Speech(prompt, language, voice, gender, changed = False):
 	if voice:
 		if changed:
 			client = Client("mhemanthkmr143/text_to_speech")
@@ -58,39 +59,33 @@ def Speech(prompt, language = "English", voice = False, changed = False, gender 
 		path = result	
 	else:
 		client = Client("k2-fsa/text-to-speech")
-		if gender == "F":
+		sid = random.randint(0, 5)
+		if gender == "F": # Female voice
 			if language == "English":
 				model = "csukuangfj/vits-piper-en_GB-southern_english_female-medium|6 speakers"
 			elif language == "Chinese (Mandarin, 普通话)":
 				model = "csukuangfj/vits-zh-hf-bronya|804"
+				if changed: 
+					model = "csukuangfj/vits-zh-hf-theresa|804"
 			else:
 				model = "csukuangfj/vits-cantonese-hf-xiaomaiiwn"
-		else:
+		elif gender == "M": # Male voice
 			if language == "English":
 				model = "csukuangfj/vits-piper-en_GB-southern_english_male-medium|8 speakers"	
 			elif language == "Chinese (Mandarin, 普通话)":
 				model = "csukuangfj/vits-zh-hf-fanchen-wnj|1"
+				if changed: 
+					model = "csukuangfj/vits-zh-hf-fanchen-C|187"
 			else:
 				model = "csukuangfj/vits-cantonese-hf-xiaomaiiwn"
-		if changed:
-			result = client.predict(
-				language=language,
-				repo_id=model,
-				text=prompt,
-				sid="5",
-				speed=1,
-				api_name="/process"
-			)
-		else:
-			result = client.predict(
-				language=language,
-				repo_id=model,
-				text=prompt,
-				sid="0",
-				speed=1,
-				api_name="/process"
-			)
-
+		result = client.predict(
+			language=language,
+			repo_id=model,
+			text=prompt,
+			sid=str(sid),
+			speed=1,
+			api_name="/process"
+		)
 		path = result[0]
 	
 	shutil.move(path, os.path.join('static', "aud.mp3"))
@@ -163,12 +158,12 @@ def generate_sound_effect(prompt):
 	)
 
 class Content():
-	def __init__(self, image_prompt, video_prompt, speech_prompt, language = "English Text (eng)", voice = False, gender = "F"):
+	def __init__(self, image_prompt, video_prompt, speech_prompt, language = "English", voice = False, gender = "F"):
 		self.image = Image(image_prompt)
-		self.speech = Speech(speech_prompt, language, voice, gender)
 		self.video = Video(video_prompt)
+		self.speech = Speech(speech_prompt, language, voice, gender)
 		self.prompts = [image_prompt, video_prompt, speech_prompt]
-		self.options = [language, voice]
+		self.options = [language, voice, gender]
 		self.changed_image, self.changed_video, self.changed_audio = False, False, False
 	def changed(self, change_image, change_video, change_audio):
 		if change_image:
@@ -179,5 +174,5 @@ class Content():
 			self.video = Video(self.prompts[1], self.changed_video)
 		if change_audio:
 			self.changed_audio = not self.changed_audio
-			self.speech = Speech(self.prompts[2], self.options[0], self.options[1], self.changed_audio)
+			self.speech = Speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio)
 

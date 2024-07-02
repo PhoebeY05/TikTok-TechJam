@@ -1,16 +1,19 @@
-from models import Image, Speech, Video, SummariseYoutubeVideo, IdentifyText
+from models import SummariseYoutubeVideo, IdentifyText, Content
 from flask import Flask, redirect, session, render_template, request, flash, url_for
 from flask_session import Session
 import os
+import time
+import threading
+
+lock = threading.Lock()
 
 app = Flask(__name__)
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.config['uploadFolder'] = 'static/upload'
 Session(app)
 
-Upload = 'static/upload'
-app.config['uploadFolder'] = Upload
 
 @app.route("/", methods = ["GET", "POST"])
 def home():
@@ -21,30 +24,30 @@ def home():
 		language = request.form.get("language")
 		voice_file = request.files["voice_file"]
 		voice_url = request.form.get("voice_url")
-		session["image_prompt"] = image_prompt
-		session["video_prompt"] = video_prompt
-		session["speech_prompt"] = speech_prompt
-		session["language"] = language
+		gender = request.form.get("gender")
 		if image_prompt and video_prompt and speech_prompt:
-			image = Image(image_prompt)
-			video = Video(video_prompt)
 			if not language:
-				language = "English Text (eng)"
+				language = "English"
+			if not gender:
+				gender = "F"
 			if voice_file or (voice_file and voice_url):
 				voice_file.save(os.path.join(app.config['uploadFolder'], voice_file.filename))
-				speech = Speech(speech_prompt, voice_file.filename, language)
+				voice = os.path.join(app.config['uploadFolder'], voice_file.filename)
 			elif voice_url:
-				speech = Speech(speech_prompt, voice_url, language)
+				voice = voice_url
 			else:
-				speech = Speech(speech_prompt, language)
+				voice = False
+			content = Content(image_prompt, video_prompt, speech_prompt, language, voice, gender)
+			image = content.image
+			video = content.video
+			speech = content.speech
+			session["content"] = content
+			return render_template("results.html", image=image, video=video, speech=speech)
 		else:
 			flash("Must fill in all the prompts")
 			return render_template("home.html")
-		session["image"] = image
-		session["video"] = video
-		session["speech"] = speech
-		return render_template("results.html", image=image, video=video, speech=speech)
 	else:
+		os.system(f'rm -rf {app.config['uploadFolder']}/*') # removing contents of upload folder to ensure user privacy
 		return render_template("home.html")
 @app.route("/insights", methods = ["GET", "POST"])
 def insights():
@@ -74,13 +77,25 @@ def change():
 	change_image = request.form.get("change_image")
 	change_video = request.form.get("change_video")
 	change_audio = request.form.get("change_audio")
-	if change_image:
-		image = Image(session["image_prompt"], True)
-		return render_template("results.html", image=image, video=session["video"], speech=session["speech"])
-	elif change_audio:
-		speech = Speech(session["speech_prompt"], session["language"], True)
-		return render_template("results.html", speech=speech, video=session["video"], image=session["image"])
+	content = session["content"]
+	content.changed(change_image, change_video, change_audio)
+	image = content.image
+	video = content.video
+	speech = content.speech
+	session["content"] = content
+	return render_template("results.html", image=image, video=video, speech=speech)
+
+@app.route("/results")
+def results():
+	if "content" in session:
+		content = session["content"]
+		image = content.image
+		video = content.video
+		speech = content.speech
+		return render_template("results.html", image=image, video=video, speech=speech)
 	else:
-		video = Video(session["video_prompt"], True)
-		return render_template("results.html", image=session["image"], video=video, speech=session["speech"])
+		return render_template("error.html")
 	
+	
+def create_app():
+   return app

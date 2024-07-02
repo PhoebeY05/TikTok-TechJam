@@ -47,7 +47,7 @@ def home():
 			flash("Must fill in all the prompts")
 			return render_template("home.html")
 	else:
-		os.system(f'rm -rf {app.config['uploadFolder']}/*') # removing contents of upload folder to ensure user privacy
+		os.system(f"rm -rf {app.config['uploadFolder']}/*") # removing contents of upload folder to ensure user privacy
 		return render_template("home.html")
 @app.route("/insights", methods = ["GET", "POST"])
 def insights():

@@ -4,13 +4,16 @@ import os
 import json
 import shutil
 import random
-import moviepy.editor as mpe
-from ffmpy import FFmpeg
+from moviepy.editor import *
+import math
+import ffmpeg
+import cv2
+from PIL import Image
 
 
-
+content_folder = 'static/content'
 # Text-To-Image Generation
-def Image(prompt, to_avoid = "lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry", changed = False):
+def generate_image(prompt, to_avoid, changed = False):
 	if changed:
 		client = Client("Aqcua/TextToImage-AISDXLTURBO")
 		result = client.predict(
@@ -39,12 +42,12 @@ def Image(prompt, to_avoid = "lowres, bad anatomy, bad hands, missing fingers, e
 				api_name="/infer"
 		)
 		path = result[0]
-	shutil.move(path, os.path.join('static', "img.png"))
-	return os.path.join('static', "img.png")
+	shutil.move(path, os.path.join(content_folder, "img.png"))
+	return os.path.join(content_folder, "img.png")
 
 
 # Text-to-Speech Generation
-def Speech(prompt, language, voice, gender, changed = False):
+def generate_speech(prompt, language, voice, gender, changed = False):
 	if voice:
 		if changed:
 			client = Client("mhemanthkmr143/text_to_speech")
@@ -63,7 +66,9 @@ def Speech(prompt, language, voice, gender, changed = False):
 		path = result	
 	else:
 		client = Client("k2-fsa/text-to-speech")
-		sid = random.randint(0, 5)
+		sid = 0
+		if language == "English" and changed:
+			sid = random.randint(0, 5)
 		if gender == "F": # Female voice
 			if language == "English":
 				model = "csukuangfj/vits-piper-en_GB-southern_english_female-medium|6 speakers"
@@ -92,13 +97,13 @@ def Speech(prompt, language, voice, gender, changed = False):
 		)
 		path = result[0]
 	
-	shutil.move(path, os.path.join('static', "aud.mp3"))
-	return os.path.join('static', "aud.mp3")
+	shutil.move(path, os.path.join(content_folder, "aud.mp3"))
+	return os.path.join(content_folder, "aud.mp3")
 
 
 
 # Text-to-Video Generation
-def Video(prompt, changed = False):
+def generate_video(prompt, changed = False):
 	if changed:
 		client = Client("BestWishYsh/MagicTime")
 		result = client.predict(
@@ -123,8 +128,8 @@ def Video(prompt, changed = False):
 			fn_index=1
 		)
 		path = result
-	shutil.move(path, os.path.join('static', "vid.mp4"))
-	return os.path.join('static', "vid.mp4")
+	shutil.move(path, os.path.join(content_folder, "vid.mp4"))
+	return os.path.join(content_folder, "vid.mp4")
 
 #Text in Image
 def IdentifyText(image):
@@ -147,49 +152,127 @@ def SummariseYoutubeVideo(video):
 	r = requests.post(url="https://sudarshanar-videosummaryfromyoutubevideo.hf.space/api/predict", json={"data": [video,"BART"]})
 	return r.json()['data'][0]
 
-
 # Sound Effect
-def generate_sound_effect(prompt):
-	client = Client("https://haoheliu-audioldm2-text2audio-text2music.hf.space/")
-	result = client.predict(
-		prompt,	# str in 'Input text' Textbox component
-		"low quality",	# str in 'Negative prompt' Textbox component
-		10,	# int | float (numeric value between 5 and 15) in 'Duration (seconds)' Slider component
-		3.5,	# int | float (numeric value between 0 and 7) in 'Guidance scale' Slider component
-		45,	# int | float in 'Seed' Number component
-		3,	# int | float (numeric value between 1 and 5) in 'Number waveforms to generate' Slider component
-		fn_index=1
-	)
+def generate_sound_effect(prompt, changed = False):
+	if changed:
+		client = Client("https://haoheliu-audioldm2-text2audio-text2music.hf.space/")
+		result = client.predict(
+			prompt,	# str in 'Input text' Textbox component
+			"low quality",	# str in 'Negative prompt' Textbox component
+			10,	# int | float (numeric value between 5 and 15) in 'Duration (seconds)' Slider component
+			3.5,	# int | float (numeric value between 0 and 7) in 'Guidance scale' Slider component
+			45,	# int | float in 'Seed' Number component
+			3,	# int | float (numeric value between 1 and 5) in 'Number waveforms to generate' Slider component
+			fn_index=1
+		)
+	else:
+		client = Client("eagle0504/stable-audio-demo")
+		result = client.predict(
+				prompt,
+				seconds_total=30,
+				steps=100,
+				cfg_scale=7,
+				randomize_seed=True,
+				seed=2093631713,
+				api_name="/predict"
+		)
+	
+	path = result
+	shutil.move(path, os.path.join(content_folder, "effect.mp3"))
+	return os.path.join(content_folder, "effect.mp3")
+
+# center_crop function uses the code in https://medium.com/curious-manava/center-crop-and-scaling-in-opencv-using-python-279c1bb77c74
+
+def center_crop(img, dim):
+	img = cv2.imread(img)
+	width, height = img.shape[1], img.shape[0]
+	# process crop width and height for max available dimension
+	crop_width = dim[0] if dim[0]<img.shape[1] else img.shape[1]
+	crop_height = dim[1] if dim[1]<img.shape[0] else img.shape[0] 
+	mid_x, mid_y = int(width/2), int(height/2)
+	cw2, ch2 = int(crop_width/2), int(crop_height/2) 
+	crop_img = img[mid_y-ch2:mid_y+ch2, mid_x-cw2:mid_x+cw2]
+	image = Image.fromarray(crop_img)
+	image.save(os.path.join(content_folder, "thumbnail.jpg"))
+	return os.path.join(content_folder, "thumbnail.jpg")
+
+
+
+def Result(image, video, audio, sound_effect):
+	capture=cv2.VideoCapture(video) 
+	# Duplicating video for both final result and original video to exist
+	source_file = open(video, 'rb')
+	result_path = os.path.join(content_folder, "result.mp4")
+	destination_file = open(result_path, 'wb')
+	shutil.copyfileobj(source_file, destination_file)
+	video = VideoFileClip(result_path)
+
+	# Trimming audio files to fit video's duration
+	duration = video.duration
+	# Speech
+	audio_input = ffmpeg.input(audio)
+	audio_cut = audio_input.audio.filter('atrim', duration=duration)
+	audio_output = ffmpeg.output(audio_cut, os.path.join(content_folder, "trim_speech.mp3"))
+	ffmpeg.run(audio_output)
+	# Sound effect
+	if sound_effect:
+		audio_input = ffmpeg.input(sound_effect)
+		audio_cut = audio_input.audio.filter('atrim', duration=duration)
+		audio_output = ffmpeg.output(audio_cut, os.path.join(content_folder, "trim_effect.mp3"))
+		ffmpeg.run(audio_output)
+	os.system(f"rm -rf {content_folder}/trim*.mp3")
+
+	# Combining video and audio
+	audio = AudioFileClip(audio)
+	result = video.set_audio(audio)
+	result.write_videofile(result_path)
+
+	# Combining video and sound_effect
+	if sound_effect:
+		video = VideoFileClip(result_path)
+		sound_effect = AudioFileClip(sound_effect)
+		final_audio = CompositeAudioClip([video.audio, sound_effect])
+		result = video.set_audio(final_audio)
+		result.write_videofile(result_path)
+
+	# Using image as thumbnail
+	width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+	height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+	image_path = center_crop(image, (width, height))
+	image = ImageClip(image_path).set_duration(1)
+	image = image.subclip(0, image.end).fx(vfx.fadeout, .5, final_color=[87, 87, 87])
+	video = video.subclip(0, video.end).fx(vfx.fadein, .5, initial_color=[87, 87, 87])
+	combine = concatenate_videoclips([image, video])
+	combine.write_videofile(result_path)
+	return result_path
 
 class Content():
-	def __init__(self, image_prompt, video_prompt, speech_prompt, language = "English", voice = False, gender = "F"):
-		self.image = Image(image_prompt)
-		self.video = Video(video_prompt)
-		self.speech = Speech(speech_prompt, language, voice, gender)
-		self.prompts = [image_prompt, video_prompt, speech_prompt]
+	def __init__(self, image_prompt,video_prompt, speech_prompt, negative_prompt = "lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry", effect_prompt = "", language = "English", voice = False, gender = "F"):
+		self.image = generate_image(image_prompt, negative_prompt)
+		self.video = generate_video(video_prompt)
+		self.speech = generate_speech(speech_prompt, language, voice, gender)
+		if not effect_prompt:
+			self.sound_effect = False
+		else:
+			self.sound_effect = generate_sound_effect(effect_prompt)
+		self.prompts = [image_prompt, video_prompt, speech_prompt, negative_prompt, effect_prompt]
 		self.options = [language, voice, gender]
-		self.changed_image, self.changed_video, self.changed_audio = False, False, False
-		self.result = os.path.join('static', 'result.mp4')
-	def changed(self, change_image, change_video, change_audio):
+		self.changed_image, self.changed_video, self.changed_audio, self.changed_effect = False, False, False, False
+		
+
+	def changed(self, change_image, change_video, change_audio, change_effect):
 		if change_image:
 			self.changed_image = not self.changed_image
-			self.image = Image(self.prompts[0], self.changed_image)
+			self.image = generate_image(self.prompts[0], self.prompts[3], self.changed_image)
 		if change_video:
 			self.changed_video = not self.changed_video
-			self.video = Video(self.prompts[1], self.changed_video)
+			self.video = generate_video(self.prompts[1], self.changed_video)
 		if change_audio:
 			self.changed_audio = not self.changed_audio
-			self.speech = Speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio)
-	def result(self):
-		source_file =  open(self.video, 'rb')
-		result_path = os.path.join('static', "result.mp4")
-		destination_file = open(result_path, 'wb')
-		shutil.copyfileobj(source_file, destination_file)
-		video = mpe.VideoFileClip(result_path)
-		audio = mpe.AudioFileClip(self.audio)
-		result = video.set_audio(audio)
-		result.write_videofile(result_path)
-		ff = FFmpeg(inputs={result_path: None}, outputs={self.image: ['-ss', '00:00:4', '-vframes', '1']})
-		ff.run()
-		return result_path
-
+			self.speech = generate_speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio)
+		if change_effect:
+			self.changed_effect = not self.changed_effect
+			self.sound_effect = generate_sound_effect(self.prompts[4], self.changed_effect)
+	def generate_result(self):
+		self.result = Result(self.image, self.video, self.speech, self.sound_effect)
+		return self.result

@@ -4,6 +4,10 @@ import os
 import json
 import shutil
 import random
+import moviepy.editor as mpe
+from ffmpy import FFmpeg
+
+
 
 # Text-To-Image Generation
 def Image(prompt, to_avoid = "lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry", changed = False):
@@ -165,6 +169,7 @@ class Content():
 		self.prompts = [image_prompt, video_prompt, speech_prompt]
 		self.options = [language, voice, gender]
 		self.changed_image, self.changed_video, self.changed_audio = False, False, False
+		self.result = os.path.join('static', 'result.mp4')
 	def changed(self, change_image, change_video, change_audio):
 		if change_image:
 			self.changed_image = not self.changed_image
@@ -175,4 +180,16 @@ class Content():
 		if change_audio:
 			self.changed_audio = not self.changed_audio
 			self.speech = Speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio)
+	def result(self):
+		source_file =  open(self.video, 'rb')
+		result_path = os.path.join('static', "result.mp4")
+		destination_file = open(result_path, 'wb')
+		shutil.copyfileobj(source_file, destination_file)
+		video = mpe.VideoFileClip(result_path)
+		audio = mpe.AudioFileClip(self.audio)
+		result = video.set_audio(audio)
+		result.write_videofile(result_path)
+		ff = FFmpeg(inputs={result_path: None}, outputs={self.image: ['-ss', '00:00:4', '-vframes', '1']})
+		ff.run()
+		return result_path
 

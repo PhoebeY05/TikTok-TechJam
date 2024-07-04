@@ -8,16 +8,20 @@
 <script async defer>
     window.addEventListener("DOMContentLoaded", (event) => {
         let language = document.getElementById("inputGroupSelect01");
-        let selectedValue = language.options[language.selectedIndex].value;
         let gender = document.getElementById("inputGroupSelect02");
-        if (selectedValue == "Cantonese (粤语)")
-        {
-            console.log("check1")
-            gender.addEventListener("change", (event) => {
+        language.addEventListener("change", (event) => {
+            let selectedValue = language.options[language.selectedIndex].value;
+            if (selectedValue === "Cantonese (粤语)")
+            {
                 console.log("check1")
                 gender.selectedIndex = 2;
-            });
-        }
+                gender.addEventListener("change", (event) => {
+                    console.log("check2")
+                    gender.selectedIndex = 2;
+                });
+            }
+        })
+    
         let loading = document.getElementsByClassName('loading');
         document.getElementById('generate').addEventListener('submit', function(e) {
             e.preventDefault();

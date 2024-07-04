@@ -3,9 +3,7 @@ from flask import Flask, redirect, session, render_template, request, flash, url
 from flask_session import Session
 import os
 import time
-import threading
 
-lock = threading.Lock()
 
 app = Flask(__name__)
 
@@ -20,6 +18,8 @@ Session(app)
 @app.route("/", methods = ["GET", "POST"])
 def home():
 	if request.method == "POST":
+		os.system(f"rm -rf {app.config['contentFolder']}/*")
+		session["generated"] = True
 		image_prompt = request.form.get("image_prompt")
 		negative_prompt = request.form.get("negative_prompt")
 		video_prompt = request.form.get("video_prompt")
@@ -29,10 +29,11 @@ def home():
 		voice_file = request.files["voice_file"]
 		voice_url = request.form.get("voice_url")
 		gender = request.form.get("gender")
+		session["sid"] = 0
 		if image_prompt and video_prompt and speech_prompt:
 			# Optional inputs
 			if not language:
-				language = "English"
+				language = "English"				
 			if not gender:
 				gender = "F"
 			if not effect_prompt:
@@ -47,23 +48,24 @@ def home():
 			else:
 				voice = False
 			# Generating content with inputs
-			content = Content(image_prompt, negative_prompt, video_prompt, speech_prompt, effect_prompt, language, voice, gender)
+			content = Content(image_prompt, video_prompt, speech_prompt, negative_prompt, effect_prompt, language, voice, gender)
 			session["content"] = content
 			image = content.image
 			video = content.video
 			speech = content.speech
+			language = content.options[0]
 			if effect_prompt:
 				sound_effect = content.sound_effect
-				return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect)
-			return render_template("results.html", image=image, video=video, speech=speech)
+				return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, language=language)
+			return render_template("results.html", image=image, video=video, speech=speech, language=language)
 		else:
 			flash("Must fill in all the prompts")
 			return render_template("home.html")
 	else:
-		# os.system(f"rm -rf {app.config['contentFolder']}/*") # removing contents of content folder to ensure user privacy
+		os.system(f"rm -rf {app.config['contentFolder']}/*") # removing contents of content folder to ensure user privacy
 		return render_template("home.html")
-@app.route("/insights", methods = ["GET", "POST"])
-def insights():
+@app.route("/media", methods = ["GET", "POST"])
+def media():
 	if request.method == "POST":
 		image = request.files["image"]
 		video = request.form.get("video")
@@ -71,19 +73,18 @@ def insights():
 			summary = SummariseYoutubeVideo(video)
 			image.save(os.path.join(app.config['uploadFolder'], image.filename))
 			text = IdentifyText(os.path.join(app.config['uploadFolder'], image.filename))
-			return render_template("insights.html", text=text, summary=summary)
+			return render_template("media.html", text=text, summary=summary)
 		elif image:
 			image.save(os.path.join(app.config['uploadFolder'], image.filename))
 			text = IdentifyText(os.path.join(app.config['uploadFolder'], image.filename))
-			return render_template("insights.html", text=text)
+			return render_template("media.html", text=text)
 		elif video:
 			summary = SummariseYoutubeVideo(video)
-			return render_template("insights.html", summary=summary)
+			return render_template("media.html", summary=summary)
 		else:
-			return render_template("insights.html", text="", summary="")
+			return render_template("media.html", text="", summary="")
 	else:
-		os.system(f"rm -rf {app.config['uploadFolder']}/*") # removing contents of upload folder to ensure user privacy
-		return render_template("insights.html")
+		return render_template("media.html")
 
 @app.route("/change", methods = ["POST"])
 def change():
@@ -92,16 +93,17 @@ def change():
 	change_audio = request.form.get("change_audio")
 	change_effect = request.form.get("change_effect")
 	content = session["content"]
-	content.changed(change_image, change_video, change_audio, change_effect)
+	content.changed(change_image, change_video, change_audio, change_effect, session["sid"])
 	session["content"] = content
 	image = content.image
 	video = content.video
 	speech = content.speech
 	sound_effect = content.sound_effect
+	language = content.options[0]
 	if sound_effect:
-		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect)
+		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, language=language)
 	else:
-		return render_template("results.html", image=image, video=video, speech=speech)
+		return render_template("results.html", image=image, video=video, speech=speech, language=language)
 
 @app.route("/results", methods = ["GET", "POST"])
 def results():
@@ -111,24 +113,29 @@ def results():
 		session["content"] = content
 		return render_template("video.html", result=result)
 	else:
-		if "content" in session:
+		if "generated" in session:
 			content = session["content"]
 			image = content.image
 			video = content.video
 			speech = content.speech
 			sound_effect = content.sound_effect
 			result = content.result
+			language = content.options[0]
 			if sound_effect and result:
-				return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, result=result)
+				return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, result=result, language=language)
 			elif result:
-				return render_template("results.html", image=image, video=video, speech=speech, result=result)
+				return render_template("results.html", image=image, video=video, speech=speech, result=result, language=language)
 			elif sound_effect:
-				return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect)
+				return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, language=language)
 			else:
-				return render_template("results.html", image=image, video=video, speech=speech)
+				return render_template("results.html", image=image, video=video, speech=speech, language=language)
 		else:
 			return render_template("error.html")
-		
-	
+
+@app.route("/video", methods = ["GET", "POST"])
+def video():
+	content = session["content"]
+	result = content.result
+	return render_template("video.html", result=result)
 def create_app():
    return app

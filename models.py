@@ -6,10 +6,9 @@ import shutil
 import random
 from moviepy.editor import *
 import math
-import ffmpeg
 import cv2
 from PIL import Image
-
+from trim import audio_trim, video_trim
 
 content_folder = 'static/content'
 # Text-To-Image Generation
@@ -47,7 +46,7 @@ def generate_image(prompt, to_avoid, changed = False):
 
 
 # Text-to-Speech Generation
-def generate_speech(prompt, language, voice, gender, changed = False):
+def generate_speech(prompt, language, voice, gender, changed = False, sid=0):
 	if voice:
 		if changed:
 			client = Client("mhemanthkmr143/text_to_speech")
@@ -66,9 +65,6 @@ def generate_speech(prompt, language, voice, gender, changed = False):
 		path = result	
 	else:
 		client = Client("k2-fsa/text-to-speech")
-		sid = 0
-		if language == "English" and changed:
-			sid = random.randint(0, 5)
 		if gender == "F": # Female voice
 			if language == "English":
 				model = "csukuangfj/vits-piper-en_GB-southern_english_female-medium|6 speakers"
@@ -85,8 +81,6 @@ def generate_speech(prompt, language, voice, gender, changed = False):
 				model = "csukuangfj/vits-zh-hf-fanchen-wnj|1"
 				if changed: 
 					model = "csukuangfj/vits-zh-hf-fanchen-C|187"
-			else:
-				model = "csukuangfj/vits-cantonese-hf-xiaomaiiwn"
 		result = client.predict(
 			language=language,
 			repo_id=model,
@@ -181,73 +175,80 @@ def generate_sound_effect(prompt, changed = False):
 	shutil.move(path, os.path.join(content_folder, "effect.mp3"))
 	return os.path.join(content_folder, "effect.mp3")
 
-# center_crop function uses the code in https://medium.com/curious-manava/center-crop-and-scaling-in-opencv-using-python-279c1bb77c74
 
-def center_crop(img, dim):
-	img = cv2.imread(img)
-	width, height = img.shape[1], img.shape[0]
-	# process crop width and height for max available dimension
-	crop_width = dim[0] if dim[0]<img.shape[1] else img.shape[1]
-	crop_height = dim[1] if dim[1]<img.shape[0] else img.shape[0] 
-	mid_x, mid_y = int(width/2), int(height/2)
-	cw2, ch2 = int(crop_width/2), int(crop_height/2) 
-	crop_img = img[mid_y-ch2:mid_y+ch2, mid_x-cw2:mid_x+cw2]
-	image = Image.fromarray(crop_img)
-	image.save(os.path.join(content_folder, "thumbnail.jpg"))
-	return os.path.join(content_folder, "thumbnail.jpg")
-
-
-
-def Result(image, video, audio, sound_effect):
-	capture=cv2.VideoCapture(video) 
+# resize function was copied from https://stackoverflow.com/questions/44370469/python-image-resizing-keep-proportion-add-white-background
+def resize(image_pil, width, height):
+    '''
+    Resize PIL image keeping ratio and using white background.
+    '''
+    ratio_w = width / image_pil.width
+    ratio_h = height / image_pil.height
+    if ratio_w < ratio_h:
+        # It must be fixed by width
+        resize_width = width
+        resize_height = round(ratio_w * image_pil.height)
+    else:
+        # Fixed by height
+        resize_width = round(ratio_h * image_pil.width)
+        resize_height = height
+    image_resize = image_pil.resize((resize_width, resize_height), Image.LANCZOS)
+    background = Image.new('RGBA', (width, height), (255, 255, 255, 255))
+    offset = (round((width - resize_width) / 2), round((height - resize_height) / 2))
+    background.paste(image_resize, offset)
+    return background.convert('RGB')
+		
+def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Audio"):
+	
 	# Duplicating video for both final result and original video to exist
-	source_file = open(video, 'rb')
+	source_file = open(video_path, 'rb')
 	result_path = os.path.join(content_folder, "result.mp4")
 	destination_file = open(result_path, 'wb')
 	shutil.copyfileobj(source_file, destination_file)
-	video = VideoFileClip(result_path)
 
-	# Trimming audio files to fit video's duration
-	duration = video.duration
-	# Speech
-	audio_input = ffmpeg.input(audio)
-	audio_cut = audio_input.audio.filter('atrim', duration=duration)
-	audio_output = ffmpeg.output(audio_cut, os.path.join(content_folder, "trim_speech.mp3"))
-	ffmpeg.run(audio_output)
-	# Sound effect
-	if sound_effect:
-		audio_input = ffmpeg.input(sound_effect)
-		audio_cut = audio_input.audio.filter('atrim', duration=duration)
-		audio_output = ffmpeg.output(audio_cut, os.path.join(content_folder, "trim_effect.mp3"))
-		ffmpeg.run(audio_output)
+	# Trimming to ensure same duration
+	video = VideoFileClip(result_path)
+	audio = AudioFileClip(audio_path)
+	image_duration = 1
+	if priority == "Audio":
+		if video.duration > audio.duration:
+			video_trim(video_path, audio, sound_effect_path)
+		elif (audio.duration - video.duration) > 1:
+			image_duration = audio.duration - video.duration
+	else:
+		audio_trim(video, audio_path, sound_effect_path)
+
 	os.system(f"rm -rf {content_folder}/trim*.mp3")
+	os.system(f"rm -rf {content_folder}/trim*.mp4")
+
+	# Resizing image to use as thumbnail
+	capture=cv2.VideoCapture(video_path) 
+	width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+	height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
+	img = Image.open(image_path)
+	img = resize(img, int(width), int(height))
+	img.save(image_path)
+
+	# Combining image and video
+	image = ImageClip(image_path).set_duration(image_duration)
+	combine = concatenate_videoclips([image, video])
+	combine.write_videofile(result_path)
 
 	# Combining video and audio
-	audio = AudioFileClip(audio)
 	result = video.set_audio(audio)
 	result.write_videofile(result_path)
 
 	# Combining video and sound_effect
-	if sound_effect:
+	if sound_effect_path:
 		video = VideoFileClip(result_path)
-		sound_effect = AudioFileClip(sound_effect)
+		sound_effect = AudioFileClip(sound_effect_path)
 		final_audio = CompositeAudioClip([video.audio, sound_effect])
 		result = video.set_audio(final_audio)
 		result.write_videofile(result_path)
 
-	# Using image as thumbnail
-	width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
-	height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
-	image_path = center_crop(image, (width, height))
-	image = ImageClip(image_path).set_duration(1)
-	image = image.subclip(0, image.end).fx(vfx.fadeout, .5, final_color=[87, 87, 87])
-	video = video.subclip(0, video.end).fx(vfx.fadein, .5, initial_color=[87, 87, 87])
-	combine = concatenate_videoclips([image, video])
-	combine.write_videofile(result_path)
 	return result_path
 
 class Content():
-	def __init__(self, image_prompt,video_prompt, speech_prompt, negative_prompt = "lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry", effect_prompt = "", language = "English", voice = False, gender = "F"):
+	def __init__(self, image_prompt,video_prompt, speech_prompt, negative_prompt, effect_prompt = "", language = "English", voice = False, gender = "F"):
 		self.image = generate_image(image_prompt, negative_prompt)
 		self.video = generate_video(video_prompt)
 		self.speech = generate_speech(speech_prompt, language, voice, gender)
@@ -258,9 +259,10 @@ class Content():
 		self.prompts = [image_prompt, video_prompt, speech_prompt, negative_prompt, effect_prompt]
 		self.options = [language, voice, gender]
 		self.changed_image, self.changed_video, self.changed_audio, self.changed_effect = False, False, False, False
+		self.result = ""
 		
 
-	def changed(self, change_image, change_video, change_audio, change_effect):
+	def changed(self, change_image, change_video, change_audio, change_effect, sid):
 		if change_image:
 			self.changed_image = not self.changed_image
 			self.image = generate_image(self.prompts[0], self.prompts[3], self.changed_image)
@@ -268,8 +270,12 @@ class Content():
 			self.changed_video = not self.changed_video
 			self.video = generate_video(self.prompts[1], self.changed_video)
 		if change_audio:
+			if self.options[0] == "English":
+				new = random.randint(0, 5)
+				while new == sid:
+					new = random.randint(0, 5)
 			self.changed_audio = not self.changed_audio
-			self.speech = generate_speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio)
+			self.speech = generate_speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio, new)
 		if change_effect:
 			self.changed_effect = not self.changed_effect
 			self.sound_effect = generate_sound_effect(self.prompts[4], self.changed_effect)

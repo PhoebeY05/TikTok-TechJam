@@ -17,11 +17,16 @@
                     <a class="nav-link active border border-primary p-2 px-3 rounded m-3" aria-current="page" href="/" style="background-color:#000066">Home</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active border border-success p-2 px-3 rounded m-3" aria-current="page" href="/insights" style="background-color:#003300">Insights</a>
+                    <a class="nav-link active border border-success p-2 px-3 rounded m-3" aria-current="page" href="/media" style="background-color:#003300">Your Media</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link active border border-danger p-2 px-3 rounded m-3" aria-current="page" href="/results" style="background-color:#660000">Results</a>
+                    <a class="nav-link active border border-danger p-2 px-3 rounded m-3" aria-current="page" href="/results" style="background-color:#660000">Content</a>
                   </li>
+                  {% if result is defined and result != "" %}
+                    <li class="nav-item">
+                        <a class="nav-link active border border-warning p-2 px-3 rounded m-3" aria-current="page" href="/video" style="background-color:#666600" id="final_video">Final Video</a>
+                    </li>
+                  {%endif%}
                 </ul>
               </div>
             </div>

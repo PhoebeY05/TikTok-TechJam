@@ -1,13 +1,19 @@
-import moviepy.editor as mpe
-from ffmpy import FFmpeg
-import shutil 
+from gradio_client import Client, handle_file
+import requests
 import os
-from models import Result
+import json
+import shutil
+import random
+from moviepy.editor import *
+import math
+import cv2
+from PIL import Image
+from trim import audio_trim, video_trim
 
 content_folder = 'static/content'
-video = os.path.join(content_folder, "vid.mp4")
-audio = os.path.join(content_folder, "aud.mp3")
-sound_effect = os.path.join(content_folder, "effect.mp3")
-image = os.path.join(content_folder, "img.png")
-
-Result(image, video, audio, sound_effect)
+result_path = os.path.join(content_folder, "result.mp4")
+audio_path = os.path.join(content_folder, "aud.mp3")
+video = VideoFileClip(result_path)
+audio = AudioFileClip(audio_path)
+result = video.set_audio(audio)
+result.write_videofile(result_path)

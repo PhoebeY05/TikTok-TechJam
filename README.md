@@ -41,6 +41,12 @@ content more efficiently.
     8. eagle0504/stable-audio-demo
 
 ## Assets used
+<p float="left">
+  <img src="/static/assets/error.png" height="200" />
+  <img src="/static/assets/one.png" height="200" /> 
+  <img src="/static/assets/two.png" height="200" />
+</p>
+
 
 ## Python Libraries used
 - flask and flask_session

@@ -1,8 +1,7 @@
-# Content Generator
 # Description
-This project aims to streamline the creation process for creators, allowing many to create a whole product with just a drop of inspiration. With our website, users can create a full-fledged video with just their ideas expressed in textual form, providing a safe haven for creators who are not artistically inclined (includes skills like directing, video editing, etc). 
+This project aims to streamline the creation process for creators, allowing many to create a whole product with just a drop of inspiration. With our website, users can create a full-fledged video with just their ideas expressed in textual form, providing a safe haven for non-artistically inclined creators (includes skills like directing, video editing, etc). 
 
-For example, with just a prompt, users can generate a thumbnail (image), content (video), and a narrator (audio) all at once. Furthermore, we allow easy customisation and provide choices, so users are not stuck with only one option that does not fit their needs.
+For example, with just a prompt and the click of a button, users can generate a thumbnail (image), content (video), a narrator (audio) and background audio all at once to post on their desired platform. Furthermore, we allow easy customisation and provide choices, so users are not stuck with only one option that does not fit their requirements.
 
 ## Problem Statement
 In the scenarios of creating and consuming streaming media content, generative Al technologies
@@ -14,18 +13,16 @@ content more efficiently.
 # Features and Functionality
 
 ## Content Generation
-- Image generation with prompt (and negative prompt)
+- Image generation with prompt (Optional parameter: negative prompt)
 - Video generation with prompt
 - Speech generation with prompt (Optional parameters: language, gender of speaker, voice source)
-(- Generating sound effects)
+- Sound Effect Generation with prompt
 
 ### Additional functionality
-- Button to change generated content if not satisfied with current one 
-    - Speech has limited options so it will switch back to original one eventually
-
-## Gaining Insights From Media Content
-- Identifying text in image
-- Summarising YouTube videos
+- Change generated content if not satisfied with the current one 
+    - Speech has limited options so it will switch back to the original one eventually
+- Combine generated content into a final video
+    - Can input own media files to combine as well
 
 # Tools used
 1. GitHub
@@ -40,21 +37,21 @@ content more efficiently.
     4. k2-fsa/text-to-speech
     5. BestWishYsh/MagicTime
     6. https://videocrafter-videocrafter.hf.space/
-    7. gokaygokay/Florence-2
-    8. https://sudarshanar-videosummaryfromyoutubevideo.hf.space/api/predict
-(    9. https://haoheliu-audioldm2-text2audio-text2music.hf.space/)
+    7. https://haoheliu-audioldm2-text2audio-text2music.hf.space/
+    8. eagle0504/stable-audio-demo
 
 ## Assets used
 
-## Libraries used
+## Python Libraries used
 - flask and flask_session
 - os
 - time
-- threading
 - gradio_client
 - requests
 - json
 - shutil
-
-
-
+- random
+- moviepy
+- cv2
+- PIL
+- ffmpeg

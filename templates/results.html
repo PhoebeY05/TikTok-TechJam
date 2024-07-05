@@ -24,9 +24,9 @@
                     Your browser does not support HTML video.
                 </video>
             </div>
-            <div class="row mt-3">
-                <form action="/results" method="POST">
-                    <input type="submit" id="combine" class="btn btn-danger btn-lg mt-3 border border-dark border-2 rounded-3" name="combine" value="Combine generated content!">
+            <div class="row align-items-center">
+                <form action="/change" method="POST">
+                    <input type="submit" class="btn btn-primary mt-3" name="change_video" value="Change Video">
                 </form>
             </div>
         </div>
@@ -61,9 +61,9 @@
             </div>
         </div>
     </div>
-    <div class="d-flex justify-content-center">
-        <form action="/change" method="POST">
-            <input type="submit" class="btn btn-primary mt-3" name="change_video" value="Change Video">
+    <div class="d-flex justify-content-center mt-5">
+        <form action="/results" method="POST">
+            <input type="submit" id="combine" class="btn btn-danger btn-lg mt-3 border border-dark border-2 rounded-3" name="combine" value="Combine generated content!">
         </form>
     </div>
 </div>

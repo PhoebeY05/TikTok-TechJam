@@ -141,13 +141,13 @@ def generate_sound_effect(prompt, changed = False):
 	else:
 		client = Client("eagle0504/stable-audio-demo")
 		result = client.predict(
-				prompt,
-				seconds_total=30,
-				steps=100,
-				cfg_scale=7,
-				randomize_seed=True,
-				seed=2093631713,
-				api_name="/predict"
+			prompt,
+			seconds_total=30,
+			steps=100,
+			cfg_scale=7,
+			randomize_seed=True,
+			seed=2093631713,
+			api_name="/predict"
 		)
 	
 	path = result

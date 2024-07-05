@@ -10,10 +10,13 @@ import cv2
 from PIL import Image
 from trim import audio_trim, video_trim
 
-content_folder = 'static/content'
-result_path = os.path.join(content_folder, "result.mp4")
-audio_path = os.path.join(content_folder, "aud.mp3")
-video = VideoFileClip(result_path)
-audio = AudioFileClip(audio_path)
-result = video.set_audio(audio)
-result.write_videofile(result_path)
+client = Client("eagle0504/stable-audio-demo")
+result = client.predict(
+    "dog barking",
+    seconds_total=30,
+    steps=100,
+    cfg_scale=7,
+    randomize_seed=True,
+    seed=2093631713,
+    api_name="/predict"
+)

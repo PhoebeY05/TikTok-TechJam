@@ -80,9 +80,10 @@ def media():
 			combined = Result(image_path, video_path, audio_path, False, priority, True)
 			return render_template("media.html", combined=combined)
 		else:
-			flash("Must upload all the files")
+			flash("Must upload all the files") 
 			return render_template("media.html")
 	else:
+		os.system(f"rm -rf {app.config['uploadFolder']}/*") # removing contents of upload folder to ensure user privacy
 		return render_template("media.html")
 
 @app.route("/change", methods = ["POST"])

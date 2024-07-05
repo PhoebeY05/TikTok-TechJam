@@ -35,16 +35,6 @@
     });
     
 </script>
-<div class="container">
-    {% for msg in get_flashed_messages()  %}
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        {{msg}}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </button>
-    </div>
-    {% endfor %}
-
-</div>
 <form action="/" method="post" class="mx-5" enctype="multipart/form-data" id="generate">
     <div class="container-fluid mt-3">
         <div class="row">

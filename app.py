@@ -1,4 +1,4 @@
-from models import SummariseYoutubeVideo, IdentifyText, Content
+from models import Content, Result
 from flask import Flask, redirect, session, render_template, request, flash, url_for
 from flask_session import Session
 import os
@@ -19,7 +19,6 @@ Session(app)
 def home():
 	if request.method == "POST":
 		os.system(f"rm -rf {app.config['contentFolder']}/*")
-		session["generated"] = True
 		image_prompt = request.form.get("image_prompt")
 		negative_prompt = request.form.get("negative_prompt")
 		video_prompt = request.form.get("video_prompt")
@@ -68,21 +67,21 @@ def home():
 def media():
 	if request.method == "POST":
 		image = request.files["image"]
-		video = request.form.get("video")
-		if image and video:
-			summary = SummariseYoutubeVideo(video)
-			image.save(os.path.join(app.config['uploadFolder'], image.filename))
-			text = IdentifyText(os.path.join(app.config['uploadFolder'], image.filename))
-			return render_template("media.html", text=text, summary=summary)
-		elif image:
-			image.save(os.path.join(app.config['uploadFolder'], image.filename))
-			text = IdentifyText(os.path.join(app.config['uploadFolder'], image.filename))
-			return render_template("media.html", text=text)
-		elif video:
-			summary = SummariseYoutubeVideo(video)
-			return render_template("media.html", summary=summary)
+		video = request.files["video"]
+		audio = request.files["audio"]
+		priority = request.form.get("priority")
+		if image and video and audio:
+			image_path = os.path.join(app.config['uploadFolder'], image.filename)
+			video_path = os.path.join(app.config['uploadFolder'], video.filename)
+			audio_path = os.path.join(app.config['uploadFolder'], audio.filename)
+			image.save(image_path)
+			video.save(video_path)
+			audio.save(audio_path)
+			combined = Result(image_path, video_path, audio_path, False, priority, True)
+			return render_template("media.html", combined=combined)
 		else:
-			return render_template("media.html", text="", summary="")
+			flash("Must upload all the files")
+			return render_template("media.html")
 	else:
 		return render_template("media.html")
 
@@ -113,7 +112,7 @@ def results():
 		session["content"] = content
 		return render_template("video.html", result=result)
 	else:
-		if "generated" in session:
+		if "content" in session and session["content"].image:
 			content = session["content"]
 			image = content.image
 			video = content.video

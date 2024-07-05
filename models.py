@@ -125,27 +125,6 @@ def generate_video(prompt, changed = False):
 	shutil.move(path, os.path.join(content_folder, "vid.mp4"))
 	return os.path.join(content_folder, "vid.mp4")
 
-#Text in Image
-def IdentifyText(image):
-	client = Client("gokaygokay/Florence-2")
-	result = client.predict(
-			image=handle_file(image),
-			task_prompt="OCR",
-			text_input=None,
-			model_id="microsoft/Florence-2-large",
-			api_name="/process_image"
-	)
-	text = result[0].replace("'", '"')
-	dictionary = json.loads(text)
-	text = dictionary['<OCR>'].replace("\n", " ")
-	return text
-
-
-# Video Summariser
-def SummariseYoutubeVideo(video):
-	r = requests.post(url="https://sudarshanar-videosummaryfromyoutubevideo.hf.space/api/predict", json={"data": [video,"BART"]})
-	return r.json()['data'][0]
-
 # Sound Effect
 def generate_sound_effect(prompt, changed = False):
 	if changed:
@@ -197,13 +176,16 @@ def resize(image_pil, width, height):
     background.paste(image_resize, offset)
     return background.convert('RGB')
 		
-def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Audio"):
+def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Audio", user = False):
 	
 	# Duplicating video for both final result and original video to exist
-	source_file = open(video_path, 'rb')
-	result_path = os.path.join(content_folder, "result.mp4")
-	destination_file = open(result_path, 'wb')
-	shutil.copyfileobj(source_file, destination_file)
+	if user:
+		result_path = video_path
+	else:
+		source_file = open(video_path, 'rb')
+		result_path = os.path.join(content_folder, "result.mp4")
+		destination_file = open(result_path, 'wb')
+		shutil.copyfileobj(source_file, destination_file)
 
 	# Trimming to ensure same duration
 	video = VideoFileClip(result_path)

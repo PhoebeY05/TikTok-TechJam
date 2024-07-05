@@ -11,26 +11,36 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2" style="text-color: #e3f2fd;">
             <div class="container-fluid">
             <span class="navbar-brand mb-0 h1 border border-light p-2 rounded">Content Generator</span>
-              <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                  <li class="nav-item">
-                    <a class="nav-link active border border-primary p-2 px-3 rounded m-3" aria-current="page" href="/" style="background-color:#000066">Home</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active border border-success p-2 px-3 rounded m-3" aria-current="page" href="/media" style="background-color:#003300">Your Media</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link active border border-danger p-2 px-3 rounded m-3" aria-current="page" href="/results" style="background-color:#660000">Content</a>
-                  </li>
-                  {% if result is defined and result != "" %}
-                    <li class="nav-item">
-                        <a class="nav-link active border border-warning p-2 px-3 rounded m-3" aria-current="page" href="/video" style="background-color:#666600" id="final_video">Final Video</a>
-                    </li>
-                  {%endif%}
-                </ul>
-              </div>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                          <a class="nav-link active border border-primary p-2 px-3 rounded m-3" aria-current="page" href="/" style="background-color:#000066">Home</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link active border border-success p-2 px-3 rounded m-3" aria-current="page" href="/media" style="background-color:#003300">Your Media</a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link active border border-danger p-2 px-3 rounded m-3" aria-current="page" href="/results" style="background-color:#660000">Content</a>
+                        </li>
+                        {% if result is defined and result != "" %}
+                          <li class="nav-item">
+                              <a class="nav-link active border border-warning p-2 px-3 rounded m-3" aria-current="page" href="/video" style="background-color:#666600" id="final_video">Final Video</a>
+                          </li>
+                        {%endif%}
+                  </ul>
+                </div>
             </div>
-          </nav>
+        </nav>
+        <div class="container">
+          {% for msg in get_flashed_messages()  %}
+          <div class="alert alert-warning alert-dismissible fade show" role="alert">
+              {{msg}}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </button>
+          </div>
+          {% endfor %}
+      </div>
+        {% block body %}{% endblock %}  
         {% block main %}{% endblock %}
     </body>
 </html>

@@ -104,7 +104,7 @@ def generate_video(prompt, changed = False):
 				dreambooth_dropdown="RcnzCartoon.safetensors",
 				motion_module_dropdown="motion_module.ckpt",
 				prompt_textbox=prompt,
-				negative_prompt_textbox="worst quality, low quality, nsfw, logo",
+				negative_prompt_textbox="worst quality, low quality, nsfw, logo, extra limbs, floating",
 				width_slider=512,
 				height_slider=512,
 				seed_textbox="-1",
@@ -131,7 +131,7 @@ def generate_sound_effect(prompt, changed = False):
 		client = Client("https://haoheliu-audioldm2-text2audio-text2music.hf.space/")
 		result = client.predict(
 			prompt,	# str in 'Input text' Textbox component
-			"low quality, extra limbs, floating",	# str in 'Negative prompt' Textbox component
+			"low quality",	# str in 'Negative prompt' Textbox component
 			10,	# int | float (numeric value between 5 and 15) in 'Duration (seconds)' Slider component
 			3.5,	# int | float (numeric value between 0 and 7) in 'Guidance scale' Slider component
 			45,	# int | float in 'Seed' Number component

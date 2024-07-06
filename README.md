@@ -78,5 +78,5 @@ pip install -r requirements.txt
 ```
 4. Start server
 ```bash
-gunicorn -w 4 -b 0.0.0.0 'app:create_app()' --timeout 600
+gunicorn -w 4 -b 0.0.0.0 'app:create_app()' --timeout 500
 ```

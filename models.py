@@ -131,7 +131,7 @@ def generate_sound_effect(prompt, changed = False):
 		client = Client("https://haoheliu-audioldm2-text2audio-text2music.hf.space/")
 		result = client.predict(
 			prompt,	# str in 'Input text' Textbox component
-			"low quality",	# str in 'Negative prompt' Textbox component
+			"low quality, extra limbs, floating",	# str in 'Negative prompt' Textbox component
 			10,	# int | float (numeric value between 5 and 15) in 'Duration (seconds)' Slider component
 			3.5,	# int | float (numeric value between 0 and 7) in 'Guidance scale' Slider component
 			45,	# int | float in 'Seed' Number component
@@ -193,7 +193,7 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 	image_duration = 1
 	if priority == "Audio":
 		if video.duration > audio.duration:
-			video_trim(video_path, audio, sound_effect_path)
+			video_trim(result_path, audio, sound_effect_path)
 		elif (audio.duration - video.duration) > 1:
 			image_duration = audio.duration - video.duration
 	else:
@@ -245,6 +245,7 @@ class Content():
 		
 
 	def changed(self, change_image, change_video, change_audio, change_effect, sid):
+		new = 0
 		if change_image:
 			self.changed_image = not self.changed_image
 			self.image = generate_image(self.prompts[0], self.prompts[3], self.changed_image)
@@ -253,7 +254,6 @@ class Content():
 			self.video = generate_video(self.prompts[1], self.changed_video)
 		if change_audio:
 			if self.options[0] == "English":
-				new = random.randint(0, 5)
 				while new == sid:
 					new = random.randint(0, 5)
 			self.changed_audio = not self.changed_audio
@@ -261,6 +261,7 @@ class Content():
 		if change_effect:
 			self.changed_effect = not self.changed_effect
 			self.sound_effect = generate_sound_effect(self.prompts[4], self.changed_effect)
+		return new
 	def generate_result(self):
 		self.result = Result(self.image, self.video, self.speech, self.sound_effect)
 		return self.result

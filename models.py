@@ -1,7 +1,5 @@
 from gradio_client import Client, handle_file
-import requests
 import os
-import json
 import shutil
 import random
 from moviepy.editor import *

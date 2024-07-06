@@ -1,8 +1,7 @@
 from models import Content, Result
-from flask import Flask, redirect, session, render_template, request, flash, url_for
+from flask import Flask, session, render_template, request, flash, send_file, url_for
 from flask_session import Session
 import os
-import time
 
 
 app = Flask(__name__)
@@ -86,6 +85,21 @@ def media():
 		os.system(f"rm -rf {app.config['uploadFolder']}/*") # removing contents of upload folder to ensure user privacy
 		return render_template("media.html")
 
+
+@app.route('/download_effect')
+def download_effect():
+    sound_effect_path = session["content"].sound_effect
+    if os.path.exists(sound_effect_path):
+        return send_file(
+            sound_effect_path,
+            mimetype='audio/mpeg',
+            as_attachment=False,
+            download_name='effect.mp3'
+        )
+    else:
+        return "Sound effect file not found.", 404
+	
+
 @app.route("/change", methods = ["POST"])
 def change():
 	change_image = request.form.get("change_image")
@@ -101,9 +115,10 @@ def change():
 	sound_effect = content.sound_effect
 	language = content.options[0]
 	if sound_effect:
-		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, language=language)
+		sound_effect_url = url_for('download_effect')
+		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect_url, language=language)
 	else:
-		return render_template("results.html", image=image, video=video, speech=speech, language=language)
+		return render_template("results.html", image=image, video=video, speech=speech,sound_effect=sound_effect, language=language)
 
 @app.route("/results", methods = ["GET", "POST"])
 def results():

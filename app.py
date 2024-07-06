@@ -86,6 +86,33 @@ def media():
 		return render_template("media.html")
 
 
+@app.route('/download_video')
+def download_video():
+    video_path = session["content"].video
+    if os.path.exists(video_path):
+        return send_file(
+            video_path,
+            mimetype="video/mp4",
+            as_attachment=False,
+            download_name='vid.mp4'
+        )
+    else:
+        return "Video file not found.", 404
+	
+
+@app.route('/download_audio')
+def download_audio():
+	audio_path = session["content"].speech
+	if os.path.exists(audio_path):
+		return send_file(
+			audio_path,
+			mimetype='audio/mpeg',
+			as_attachment=False,
+			download_name='aud.mp3'
+		)
+	else:
+		return "Audio file not found.", 404
+
 @app.route('/download_effect')
 def download_effect():
     sound_effect_path = session["content"].sound_effect
@@ -98,6 +125,7 @@ def download_effect():
         )
     else:
         return "Sound effect file not found.", 404
+
 	
 
 @app.route("/change", methods = ["POST"])
@@ -114,9 +142,11 @@ def change():
 	speech = content.speech
 	sound_effect = content.sound_effect
 	language = content.options[0]
+	video = url_for('download_video')
+	audio = url_for('download_audio')
 	if sound_effect:
-		sound_effect_url = url_for('download_effect')
-		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect_url, language=language)
+		sound_effect = url_for('download_effect')
+		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, language=language)
 	else:
 		return render_template("results.html", image=image, video=video, speech=speech,sound_effect=sound_effect, language=language)
 

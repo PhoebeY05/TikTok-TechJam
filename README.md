@@ -66,7 +66,7 @@ content more efficiently.
 # Using Content Generator
 1. Go into the root folder
 ```bash
-cd TikTok-TechJam
+cd TikTok-TechJam-main
 ```
 2. Activate the virtual environment
 ```bash

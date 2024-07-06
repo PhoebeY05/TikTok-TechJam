@@ -193,14 +193,18 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 	image_duration = 1
 	if priority == "Audio":
 		if video.duration > audio.duration:
-			video_trim(result_path, audio, sound_effect_path)
+			video_path = video_trim(result_path, audio, sound_effect_path)
+			source_file = open(video_path, 'rb')
+			destination_file = open(result_path, 'wb')
+			shutil.copyfileobj(source_file, destination_file)
 		elif (audio.duration - video.duration) > 1:
 			image_duration = audio.duration - video.duration
 	else:
-		audio_trim(video, audio_path, sound_effect_path)
-
-	os.system(f"rm -rf {content_folder}/trim*.mp3")
-	os.system(f"rm -rf {content_folder}/trim*.mp4")
+		audio_path = audio_trim(video, audio_path, sound_effect_path)
+	
+	sound_effect_path = os.path.join(content_folder, "trim_effect.mp3")
+	video = VideoFileClip(result_path)
+	audio = AudioFileClip(audio_path)
 
 	# Resizing image to use as thumbnail
 	capture=cv2.VideoCapture(video_path) 
@@ -222,11 +226,14 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 	# Combining video and sound_effect
 	if sound_effect_path:
 		video = VideoFileClip(result_path)
+		sound_effect_path = os.path.join(content_folder, "trim_effect.mp3")
 		sound_effect = AudioFileClip(sound_effect_path)
 		final_audio = CompositeAudioClip([video.audio, sound_effect])
 		result = video.set_audio(final_audio)
 		result.write_videofile(result_path)
 
+	os.system(f"rm -rf {content_folder}/trim*.mp3")
+	os.system(f"rm -rf {content_folder}/trim*.mp4")		
 	return result_path
 
 class Content():

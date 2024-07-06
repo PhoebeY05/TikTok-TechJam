@@ -21,6 +21,7 @@ def audio_trim(video, audio, sound_effect):
 	# Sound effect
 	if sound_effect:
 		sound_effect_trim(sound_effect, duration)
+	return os.path.join(content_folder, "trim_speech.mp3")
 
 def video_trim(video, audio, sound_effect):
 	# Trimming video and sound_effect files to fit audio's duration
@@ -28,3 +29,4 @@ def video_trim(video, audio, sound_effect):
 	ffmpeg_extract_subclip(video, 0, duration, targetname=os.path.join(content_folder, "trim_video.mp4"))
 	if sound_effect:
 		sound_effect_trim(sound_effect, duration)
+	return os.path.join(content_folder, "trim_video.mp4")

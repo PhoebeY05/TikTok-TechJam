@@ -198,6 +198,8 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 		elif (audio.duration - video.duration) > 1:
 			image_duration = audio.duration - video.duration
 			sound_effect_trim(sound_effect_path, audio.duration)
+		else:
+			sound_effect_trim(sound_effect_path, audio.duration)
 	else:
 		audio_path = audio_trim(video, audio_path, sound_effect_path)
 	

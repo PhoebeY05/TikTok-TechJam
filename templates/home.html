@@ -26,9 +26,7 @@
         document.getElementById('generate').addEventListener('submit', function(e) {
             e.preventDefault();
             for (let i = 0; i < loading.length; i++) {
-                if(loading[i].value) {
-                    loading[i].removeAttribute("hidden");
-                }
+                loading[i].removeAttribute("hidden");
             }
             this.submit();
         });

@@ -86,6 +86,19 @@ def media():
 		return render_template("media.html")
 
 
+@app.route('/download_image')
+def download_image():
+	image_path = session["content"].image
+	if os.path.exists(image_path):
+		return send_file(
+			image_path,
+			mimetype="image/png",
+			as_attachment=False,
+			download_name='img.png'
+		)
+	else:
+		return "Image file not found.", 404
+
 @app.route('/download_video')
 def download_video():
     video_path = session["content"].video
@@ -137,13 +150,11 @@ def change():
 	content = session["content"]
 	content.changed(change_image, change_video, change_audio, change_effect, session["sid"])
 	session["content"] = content
-	image = content.image
-	video = content.video
-	speech = content.speech
 	sound_effect = content.sound_effect
 	language = content.options[0]
+	image = url_for('download_image')
 	video = url_for('download_video')
-	audio = url_for('download_audio')
+	speech = url_for('download_audio')
 	if sound_effect:
 		sound_effect = url_for('download_effect')
 		return render_template("results.html", image=image, video=video, speech=speech, sound_effect=sound_effect, language=language)

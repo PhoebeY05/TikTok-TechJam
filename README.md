@@ -27,7 +27,8 @@ content more efficiently.
 # Tools used
 1. GitHub
 2. VS Code
-3. HuggingFace
+3. Bootstrap v5.0.2
+4. HuggingFace
 
 ## APIs used
 - HuggingFace Spaces gradio API
@@ -61,3 +62,21 @@ content more efficiently.
 - cv2
 - PIL
 - ffmpeg
+
+# Using Content Generator
+1. Go into the root folder
+```bash
+cd TikTok-TechJam
+```
+2. Activate the virtual environment
+```bash
+source venv/bin/activate
+```
+3. Install packages in requirements.txt
+```bash
+pip install -r requirements.txt
+```
+4. Start server
+```bash
+gunicorn -w 4 -b 0.0.0.0 'app:create_app()' --timeout 600
+```

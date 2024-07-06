@@ -8,7 +8,7 @@ from moviepy.editor import *
 import math
 import cv2
 from PIL import Image
-from trim import audio_trim, video_trim
+from trim import audio_trim, video_trim, sound_effect_trim
 
 content_folder = 'static/content'
 # Text-To-Image Generation
@@ -199,10 +199,11 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 			shutil.copyfileobj(source_file, destination_file)
 		elif (audio.duration - video.duration) > 1:
 			image_duration = audio.duration - video.duration
+			sound_effect_trim(sound_effect_path, audio.duration)
 	else:
 		audio_path = audio_trim(video, audio_path, sound_effect_path)
 	
-	sound_effect_path = os.path.join(content_folder, "trim_effect.mp3")
+	
 	video = VideoFileClip(result_path)
 	audio = AudioFileClip(audio_path)
 
@@ -231,7 +232,7 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 		final_audio = CompositeAudioClip([video.audio, sound_effect])
 		result = video.set_audio(final_audio)
 		result.write_videofile(result_path)
-
+	
 	os.system(f"rm -rf {content_folder}/trim*.mp3")
 	os.system(f"rm -rf {content_folder}/trim*.mp4")		
 	return result_path

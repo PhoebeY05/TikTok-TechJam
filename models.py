@@ -3,7 +3,6 @@ import os
 import shutil
 import random
 from moviepy.editor import *
-import math
 import cv2
 from PIL import Image
 from trim import audio_trim, video_trim, sound_effect_trim

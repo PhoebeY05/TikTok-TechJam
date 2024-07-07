@@ -3,6 +3,9 @@ This project aims to streamline the creation process for creators, allowing many
 
 For example, with just a prompt and the click of a button, users can generate a thumbnail (image), content (video), a narrator (audio) and background audio all at once to post on their desired platform. Furthermore, we allow easy customisation and provide choices, so users are not stuck with only one option that does not fit their requirements.
 
+<img width="1470" alt="Screenshot 2024-07-07 at 4 16 54 PM" src="https://github.com/PhoebeY05/TikTok-TechJam/assets/115935747/d4d5646d-6558-4d05-b242-f39f1c29c2ce">
+
+
 ## Problem Statement
 In the scenarios of creating and consuming streaming media content, generative Al technologies
 can be utilized for content optimization, information extraction, and style transformation, to

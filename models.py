@@ -177,13 +177,10 @@ def resize(image_pil, width, height):
 def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Audio", user = False):
 	
 	# Duplicating video for both final result and original video to exist
-	if user:
-		result_path = video_path
-	else:
-		source_file = open(video_path, 'rb')
-		result_path = os.path.join(content_folder, "result.mp4")
-		destination_file = open(result_path, 'wb')
-		shutil.copyfileobj(source_file, destination_file)
+	result_path = os.path.join(content_folder, "result.mp4")
+	source_file = open(video_path, 'rb')
+	destination_file = open(result_path, 'wb')
+	shutil.copyfileobj(source_file, destination_file)
 
 	# Trimming to ensure same duration
 	video = VideoFileClip(result_path)
@@ -202,13 +199,12 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 			sound_effect_trim(sound_effect_path, audio.duration)
 	else:
 		audio_path = audio_trim(video, audio_path, sound_effect_path)
-	
-	
+
 	video = VideoFileClip(result_path)
 	audio = AudioFileClip(audio_path)
-
+	
 	# Resizing image to use as thumbnail
-	capture=cv2.VideoCapture(video_path) 
+	capture=cv2.VideoCapture(result_path) 
 	width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
 	height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
 	img = Image.open(image_path)
@@ -217,10 +213,12 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 
 	# Combining image and video
 	image = ImageClip(image_path).set_duration(image_duration)
-	combine = concatenate_videoclips([image, video])
-	combine.write_videofile(result_path)
+	combine = concatenate_videoclips([image, video], method="compose")
+	temp_video_path = os.path.join(content_folder, "temp_video.mp4")
+	combine.write_videofile(temp_video_path)
 
 	# Combining video and audio
+	video = VideoFileClip(temp_video_path)
 	result = video.set_audio(audio)
 	result.write_videofile(result_path)
 
@@ -235,10 +233,11 @@ def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Au
 	
 	os.system(f"rm -rf {content_folder}/trim*.mp3")
 	os.system(f"rm -rf {content_folder}/trim*.mp4")		
+	os.system(f"rm -rf {content_folder}/temp*.mp4")		
 	return result_path
 
 class Content():
-	def __init__(self, image_prompt,video_prompt, speech_prompt, negative_prompt, effect_prompt = "", language = "English", voice = False, gender = "F"):
+	def __init__(self, image_prompt, video_prompt, speech_prompt, negative_prompt, effect_prompt = "", language = "English", voice = False, gender = "F"):
 		self.image = generate_image(image_prompt, negative_prompt)
 		self.video = generate_video(video_prompt)
 		self.speech = generate_speech(speech_prompt, language, voice, gender)
@@ -262,8 +261,10 @@ class Content():
 			self.video = generate_video(self.prompts[1], self.changed_video)
 		if change_audio:
 			if self.options[0] == "English":
-				while new == sid:
+				while True:
 					new = random.randint(0, 5)
+					if new != sid:
+						break
 			self.changed_audio = not self.changed_audio
 			self.speech = generate_speech(self.prompts[2], self.options[0], self.options[1], self.options[2], self.changed_audio, new)
 		if change_effect:

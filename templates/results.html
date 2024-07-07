@@ -35,10 +35,7 @@
                 {% if sound_effect is defined and sound_effect != "" %}
                 <h4>Speech</h4>
                 {% endif %}
-                <audio controls>
-                    <source src="{{speech}}" type="audio/mpeg">
-                  Your browser does not support the audio element.
-                </audio>
+                <audio src="{{ speech }}" controls></audio>
                 {% if language != "Cantonese (粤语)" %}
                 <div class="row align-items-center">
                     <form action="/change" method="POST">
@@ -48,10 +45,7 @@
                 {% endif %}
                 {% if sound_effect is defined and sound_effect != "" %}
                 <h4 class="mt-3">Sound Effect</h4>
-                <audio controls>
-                    <source src="{{sound_effect}}" type="audio/mpeg">
-                  Your browser does not support the audio element.
-                </audio>
+                <audio src="{{ sound_effect }}" controls></audio>
                 <div class="row align-items-center">
                     <form action="/change" method="POST">
                         <input type="submit" class="btn btn-primary mt-3" name="change_effect" value="Change Sound Effect">

@@ -9,6 +9,7 @@ from PIL import Image
 from trim import audio_trim, video_trim, sound_effect_trim
 
 content_folder = 'static/content'
+upload_folder = 'static/upload'
 # Text-To-Image Generation
 def generate_image(prompt, to_avoid, changed = False):
 	if changed:
@@ -177,7 +178,10 @@ def resize(image_pil, width, height):
 def Result(image_path, video_path, audio_path, sound_effect_path, priority = "Audio", user = False):
 	
 	# Duplicating video for both final result and original video to exist
-	result_path = os.path.join(content_folder, "result.mp4")
+	if user:
+		result_path = os.path.join(upload_folder, "result.mp4")
+	else:
+		result_path = os.path.join(content_folder, "result.mp4")
 	source_file = open(video_path, 'rb')
 	destination_file = open(result_path, 'wb')
 	shutil.copyfileobj(source_file, destination_file)

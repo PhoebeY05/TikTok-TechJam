@@ -67,6 +67,7 @@ content more efficiently.
 - ffmpeg
 
 # Using Content Generator
+## Setting Up Locally
 1. Go into the root folder
 ```bash
 cd TikTok-TechJam-main
@@ -83,3 +84,7 @@ pip install -r requirements.txt
 ```bash
 gunicorn -w 4 -b 0.0.0.0 'app:create_app()' --timeout 600
 ```
+## Website
+Go to https://content-generator-xlck.onrender.com
+
+**Disclaimer: Website doesn't support upload functionality**

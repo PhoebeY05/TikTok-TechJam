@@ -5,10 +5,11 @@ import ffmpeg
 content_folder = 'static/content'
 
 def sound_effect_trim(sound_effect, duration):
-	audio_input = ffmpeg.input(sound_effect)
-	audio_cut = audio_input.audio.filter('atrim', duration=duration)
-	audio_output = ffmpeg.output(audio_cut, os.path.join(content_folder, "trim_effect.mp3"))
-	ffmpeg.run(audio_output)
+	if sound_effect:
+		audio_input = ffmpeg.input(sound_effect)
+		audio_cut = audio_input.audio.filter('atrim', duration=duration)
+		audio_output = ffmpeg.output(audio_cut, os.path.join(content_folder, "trim_effect.mp3"))
+		ffmpeg.run(audio_output)
 	
 def audio_trim(video, audio, sound_effect):
 	# Trimming audio files to fit video's duration
